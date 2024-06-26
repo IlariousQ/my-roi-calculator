@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EV Charging ROI Calculator</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f0f0f0;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+    }
+
+    .calculator {
+        max-width: 500px;
+        background-color: #fff;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    label {
+        font-weight: bold;
+        display: block;
+        margin-bottom: 8px;
+    }
+
+    input, select {
+        width: 100%;
+        padding: 10px;
+        font-size: 16px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+
+    button {
+        background-color: #4CAF50;
+        color: white;
+        padding: 12px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        width: 100%;
+    }
+
+    button:hover {
+        background-color: #45a049;
+    }
+
+    .results {
+        margin-top: 20px;
+    }
+
+    .results h2 {
+        font-size: 18px;
+    }
+
+    .results p {
+        font-size: 16px;
+    }
+</style>
+</head>
+<body>
+<div class="calculator">
+    <h1>EV Charging ROI Calculator</h1>
+    <form id="roiForm">
+        <div class="form-group">
+            <label for="chargerType">What type of EV charging stations do you intend to install?</label>
+            <select id="chargerType" name="chargerType">
+                <option value="AC">AC EV Charger max 22kW</option>
+                <option value="DC50">DC EV Charger 50 - 100kW</option>
+                <option value="DC150">DC EV Charger 150+ kW</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="chargingPoints">How many charging points (each with 2 plugs) do you plan to install?</label>
+            <input type="number" id="chargingPoints" name="chargingPoints" min="1" max="50" required>
+        </div>
+        <div class="form-group">
+            <label for="location">Where will the charging points be installed?</label>
+            <select id="location" name="location">
+                <option value="largeCity">Large Medium Size city</option>
+                <option value="smallCity">Small city</option>
+                <option value="countryside">Countryside</option>
+                <option value="industrial">Industrial area</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="vicinity">The EV charging stations will be located in the vicinity of:</label>
+            <select id="vicinity" name="vicinity">
+                <option value="highway">Highway</option>
+                <option value="mainRoad">Main road</option>
+                <option value="countryRoad">Country road</option>
+                <option value="none">Nothing of the sort</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="proximity">Within a radius of one kilometer, there are:</label>
+            <select id="proximity" name="proximity">
+                <option value="none">No EV charging stations</option>
+                <option value="few">A few EV charging stations</option>
+                <option value="some">Some EV charging stations</option>
+                <option value="many">Many EV charging stations</option>
+            </select>
+        </div>
+        <button type="button" onclick="calculateROI()">Calculate ROI</button>
+    </form>
+    <div id="results" class="results">
+        <h2>Results:</h2>
+        <p id="paybackPeriod">Payback Period: <span id="resultYears"></span> years</p>
+    </div>
+</div>
+
+<script>
+function calculateROI() {
+    // Retrieve input values
+    const chargerType = document.getElementById('chargerType').value;
+    const chargingPoints = parseInt(document.getElementById('chargingPoints').value);
+    const location = document.getElementById('location').value;
+    const vicinity = document.getElementById('vicinity').value;
+    const proximity = document.getElementById('proximity').value;
+
+    // Define multipliers based on selected options
+    let chargerMultiplier = 0;
+    if (chargerType === 'AC') {
+        chargerMultiplier = 1;
+    } else if (chargerType === 'DC50') {
+        chargerMultiplier = 1.2;
+    } else if (chargerType === 'DC150') {
+        chargerMultiplier = 1.5;
+    }
+
+    let locationMultiplier = 0;
+    if (location === 'largeCity') {
+        locationMultiplier = 1;
+    } else if (location === 'smallCity') {
+        locationMultiplier = 0.8;
+    } else if (location === 'countryside') {
+        locationMultiplier = 0.7;
+    } else if (location === 'industrial') {
+        locationMultiplier = 1.1;
+    }
+
+    let vicinityMultiplier = 0;
+    if (vicinity === 'highway') {
+        vicinityMultiplier = 1.5;
+    } else if (vicinity === 'mainRoad') {
+        vicinityMultiplier = 1.2;
+    } else if (vicinity === 'countryRoad') {
+        vicinityMultiplier = 1;
+    } else if (vicinity === 'none') {
+        vicinityMultiplier = 0.8;
+    }
+
+    let proximityMultiplier = 0;
+    if (proximity === 'none') {
+        proximityMultiplier = 1.5;
+    } else if (proximity === 'few') {
+        proximityMultiplier = 1.2;
+    } else if (proximity === 'some') {
+        proximityMultiplier = 1;
+    } else if (proximity === 'many') {
+        proximityMultiplier = 0.8;
+    }
+
+    // Calculate total initial cost
+    const costPerPoint = calculateCostPerPoint(chargerType);
+    const totalInitialCost = costPerPoint * chargingPoints * chargerMultiplier * locationMultiplier * vicinityMultiplier * proximityMultiplier;
+
+    // Hypothetical estimated annual profit
+    const estimatedAnnualProfit = 8000; // Example value, replace with actual calculation
+
+    // Calculate payback period in years
+    const paybackPeriod = totalInitialCost / estimatedAnnualProfit;
+
+    // Display result
+    const resultYears = document.getElementById('resultYears');
+    resultYears.textContent = paybackPeriod.toFixed(2);
+
+    // Show results section
+    const resultsSection = document.getElementById('results');
+    resultsSection.style.display = 'block';
+}
+
+function calculateCostPerPoint(chargerType) {
+    if (chargerType === 'AC') {
+        return 5000; // Cost per charging point for AC EV Charger
+    } else if (chargerType === 'DC50') {
+        return 10000; // Cost per charging point for DC EV Charger 50-100 kW
+    } else if (chargerType === 'DC150') {
+        return 15000; // Cost per charging point for DC EV Charger 150+ kW
+    }
+}
+</script>
+</body>
+</html>
